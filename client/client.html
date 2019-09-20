@@ -6,7 +6,85 @@
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.34/browser.min.js"></script>
   <script type="text/babel">
+    //function to handle our xhr response
+    const handleResponse = (xhr) => {   
+      // grab the content section and content-type
+      const content = document.querySelector("#content");
+      const type = xhr.getResponseHeader('content-type');
+      
+      // check the xhr status code and handle accordingly
+      switch(xhr.status) {
+        case 200: // success
+          content.innerHTML = `<b>Success</b>`;
+          break;
+        case 400: // bad request 
+          content.innerHTML = `<b>Bad Request</b>`;
+          break;
+        case 401: // unauthorized
+          content.innerHTML = `<b>Unauthorized</b>`;
+          break;
+        case 403: // forbidden
+          content.innerHTML = `<b>Forbidden</b>`;
+          break;
+        case 404: // not found (requested resource does not exist)
+          content.innerHTML = `<b>Resource Not Found</b>`;
+          break;
+        case 500: // internal error
+          content.innerHTML = `<b>Internal Error</b>`;
+          break;
+        case 501: // not implemented
+          content.innerHTML = `<b>Not Implemented</b>`;
+          break;
+        default: // default other errors we are not handling in this example
+          content.innerHTML = `<b>Error code not implemented by client.</b>`;
+          break;
+      }
+      
+      // check for either json or xml and handle posting message appropriately
+      if (type === "application/json") {
+        const obj = JSON.parse(xhr.response);
+        content.innerHTML += `<p>Message: ${obj.message}</p>`
+        
+      } else if (type === "text/xml") {
+        const message = xhr.responseXML.querySelector("message").textContent;
+        const p = document.createElement('p');
+        p.textContent = `Message: ${message}`;
+        content.appendChild(p);
+      }
+    };
 
+    //function to send request
+    const requestUpdate = (e, pageSelect, typeSelect) => {
+    
+      // get values of page and type dropdown
+      const url = pageSelect.value;
+      const type = typeSelect.value;
+      
+      // create xhr
+      const xhr = new XMLHttpRequest();
+      
+      xhr.open('GET', url);
+      xhr.setRequestHeader('Accept', type);
+      xhr.onload = () => handleResponse(xhr);
+      
+      xhr.send();
+    };
+    
+    // init method
+    const init = () => {
+      // grab dom objects
+      const sendButton = document.querySelector("#send");
+      const pageSelect = document.querySelector("#page");
+      const typeSelect = document.querySelector("#type");
+      
+      // function to handle our request
+      const urlHandler = (e) => requestUpdate(e, pageSelect, typeSelect);
+      
+      // add event listener
+      sendButton.addEventListener('click', urlHandler);
+    };
+    
+    window.onload = init;
   </script>
 </head>
 <body>
